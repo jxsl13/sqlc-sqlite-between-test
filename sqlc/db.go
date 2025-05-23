@@ -24,17 +24,41 @@ func New(db DBTX) *Queries {
 func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	q := Queries{db: db}
 	var err error
-	if q.queryBetweenStmt, err = db.PrepareContext(ctx, queryBetween); err != nil {
-		return nil, fmt.Errorf("error preparing query QueryBetween: %w", err)
+	if q.queryBetweenBrokenStmt, err = db.PrepareContext(ctx, queryBetweenBroken); err != nil {
+		return nil, fmt.Errorf("error preparing query QueryBetweenBroken: %w", err)
+	}
+	if q.queryBetweenNamedBrokenStmt, err = db.PrepareContext(ctx, queryBetweenNamedBroken); err != nil {
+		return nil, fmt.Errorf("error preparing query QueryBetweenNamedBroken: %w", err)
+	}
+	if q.queryBetweenNamedWorkingStmt, err = db.PrepareContext(ctx, queryBetweenNamedWorking); err != nil {
+		return nil, fmt.Errorf("error preparing query QueryBetweenNamedWorking: %w", err)
+	}
+	if q.queryBetweenWorkingStmt, err = db.PrepareContext(ctx, queryBetweenWorking); err != nil {
+		return nil, fmt.Errorf("error preparing query QueryBetweenWorking: %w", err)
 	}
 	return &q, nil
 }
 
 func (q *Queries) Close() error {
 	var err error
-	if q.queryBetweenStmt != nil {
-		if cerr := q.queryBetweenStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing queryBetweenStmt: %w", cerr)
+	if q.queryBetweenBrokenStmt != nil {
+		if cerr := q.queryBetweenBrokenStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing queryBetweenBrokenStmt: %w", cerr)
+		}
+	}
+	if q.queryBetweenNamedBrokenStmt != nil {
+		if cerr := q.queryBetweenNamedBrokenStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing queryBetweenNamedBrokenStmt: %w", cerr)
+		}
+	}
+	if q.queryBetweenNamedWorkingStmt != nil {
+		if cerr := q.queryBetweenNamedWorkingStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing queryBetweenNamedWorkingStmt: %w", cerr)
+		}
+	}
+	if q.queryBetweenWorkingStmt != nil {
+		if cerr := q.queryBetweenWorkingStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing queryBetweenWorkingStmt: %w", cerr)
 		}
 	}
 	return err
@@ -74,15 +98,21 @@ func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, ar
 }
 
 type Queries struct {
-	db               DBTX
-	tx               *sql.Tx
-	queryBetweenStmt *sql.Stmt
+	db                           DBTX
+	tx                           *sql.Tx
+	queryBetweenBrokenStmt       *sql.Stmt
+	queryBetweenNamedBrokenStmt  *sql.Stmt
+	queryBetweenNamedWorkingStmt *sql.Stmt
+	queryBetweenWorkingStmt      *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
-		db:               tx,
-		tx:               tx,
-		queryBetweenStmt: q.queryBetweenStmt,
+		db:                           tx,
+		tx:                           tx,
+		queryBetweenBrokenStmt:       q.queryBetweenBrokenStmt,
+		queryBetweenNamedBrokenStmt:  q.queryBetweenNamedBrokenStmt,
+		queryBetweenNamedWorkingStmt: q.queryBetweenNamedWorkingStmt,
+		queryBetweenWorkingStmt:      q.queryBetweenWorkingStmt,
 	}
 }

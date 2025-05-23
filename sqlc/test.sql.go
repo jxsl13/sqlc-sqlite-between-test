@@ -9,14 +9,113 @@ import (
 	"context"
 )
 
-const queryBetween = `-- name: QueryBetween :many
+const queryBetweenBroken = `-- name: QueryBetweenBroken :many
 SELECT id FROM test
 WHERE name = ?
 AND id BETWEEN ? AND ?
 `
 
-func (q *Queries) QueryBetween(ctx context.Context, name string) ([]int64, error) {
-	rows, err := q.query(ctx, q.queryBetweenStmt, queryBetween, name)
+func (q *Queries) QueryBetweenBroken(ctx context.Context, name string) ([]int64, error) {
+	rows, err := q.query(ctx, q.queryBetweenBrokenStmt, queryBetweenBroken, name)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []int64{}
+	for rows.Next() {
+		var id int64
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const queryBetweenNamedBroken = `-- name: QueryBetweenNamedBroken :many
+SELECT id FROM test
+WHERE name = ?1
+AND id BETWEEN ?2 AND ?3
+`
+
+func (q *Queries) QueryBetweenNamedBroken(ctx context.Context, name string) ([]int64, error) {
+	rows, err := q.query(ctx, q.queryBetweenNamedBrokenStmt, queryBetweenNamedBroken, name)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []int64{}
+	for rows.Next() {
+		var id int64
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const queryBetweenNamedWorking = `-- name: QueryBetweenNamedWorking :many
+SELECT id FROM test
+WHERE id BETWEEN ?1 AND ?2
+AND name = ?3
+`
+
+type QueryBetweenNamedWorkingParams struct {
+	Min  int64  `db:"min"`
+	Max  int64  `db:"max"`
+	Name string `db:"name"`
+}
+
+func (q *Queries) QueryBetweenNamedWorking(ctx context.Context, arg QueryBetweenNamedWorkingParams) ([]int64, error) {
+	rows, err := q.query(ctx, q.queryBetweenNamedWorkingStmt, queryBetweenNamedWorking, arg.Min, arg.Max, arg.Name)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []int64{}
+	for rows.Next() {
+		var id int64
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const queryBetweenWorking = `-- name: QueryBetweenWorking :many
+SELECT id FROM test
+WHERE id BETWEEN ? AND ?
+AND name = ?
+`
+
+type QueryBetweenWorkingParams struct {
+	ID   int64  `db:"id"`
+	ID_2 int64  `db:"id_2"`
+	Name string `db:"name"`
+}
+
+func (q *Queries) QueryBetweenWorking(ctx context.Context, arg QueryBetweenWorkingParams) ([]int64, error) {
+	rows, err := q.query(ctx, q.queryBetweenWorkingStmt, queryBetweenWorking, arg.ID, arg.ID_2, arg.Name)
 	if err != nil {
 		return nil, err
 	}
