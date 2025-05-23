@@ -1,0 +1,22 @@
+version: "2"
+sql:
+  - engine: "sqlite"
+    queries: [
+      "queries/test.sql"
+    ]
+    schema: [
+      "migrations",
+    ]
+    gen:
+      go:
+        sql_package: "database/sql"
+        package: "sqlc"
+        out: "sqlc"
+        overrides: []
+
+        emit_db_tags: true
+        emit_prepared_queries: true
+        emit_empty_slices: true
+        emit_enum_valid_method: true
+        emit_pointers_for_null_types: true
+        emit_all_enum_values: true
